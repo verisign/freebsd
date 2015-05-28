@@ -130,16 +130,27 @@ struct in_conninfo {
 struct	icmp6_filter;
 
 /*-
- * struct inpcb captures the network layer state for TCP, UDP, and raw IPv4
- * and IPv6 sockets.  In the case of TCP, further per-connection state is
+ * struct inpcb captures the network layer state for TCP, UDP, and raw IPv4 and
+ * IPv6 sockets.  In the case of TCP and UDP, further per-connection state is
  * hung off of inp_ppcb most of the time.  Almost all fields of struct inpcb
  * are static after creation or protected by a per-inpcb rwlock, inp_lock.  A
- * few fields also require the global pcblist lock for the inpcb to be held,
- * when modified, such as the global connection lists.  This model means that
- * connections can be looked up without holding the per-connection lock, which
- * is important for performance when attempting to find the connection for a
- * packet given its IP and port tuple.  Writing to these fields that write
- * locks be held on both the inpcb and global locks.
+ * few fields are protected by multiple locks as indicated in the locking notes
+ * below.  For these fields, all of the listed locks must be write-locked for
+ * any modifications.  However, these fields can be safely read while any one of
+ * the listed locks are read-locked.  This model can permit greater concurrency
+ * for read operations.  For example, connections can be looked up while only
+ * holding a read lock on the global pcblist lock.  This is important for
+ * performance when attempting to find the connection for a packet given its IP
+ * and port tuple.
+ *
+ * One noteworthy exception is that the global pcbinfo lock follows a different
+ * set of rules in relation to the inp_list field.  Rather than being
+ * write-locked for modifications and read-locked for list iterations, it must
+ * be read-locked during modifications and write-locked during list iterations.
+ * This ensures that the relatively rare global list iterations safely walk a
+ * stable snapshot of connections while allowing more common list modifications
+ * to safely grab the pcblist lock just while adding or removing a connection
+ * from the global list.
  *
  * Key:
  * (c) - Constant after initialization
@@ -162,6 +173,10 @@ struct	icmp6_filter;
  * socket has been freed), or there may be close(2)-related races.
  *
  * The inp_vflag field is overloaded, and would otherwise ideally be (c).
+ *
+ * TODO:  If currently only the TCP stack is leveraging the global pcbinfo lock
+ * read-lock usage during modification, this model can be applied to other
+ * protocols (especially SCTP).
  */
 struct inpcb {
 	LIST_ENTRY(inpcb) inp_hash;	/* (h/i) hash list */
