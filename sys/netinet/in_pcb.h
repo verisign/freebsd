@@ -330,13 +330,13 @@ struct inpcbinfo {
 	 * Global list of inpcbs on the protocol.
 	 */
 	struct inpcbhead	*ipi_listhead;		/* (g/l) */
-	u_int			 ipi_count;		/* (g/l) */
+	u_int			 ipi_count;		/* (l) */
 
 	/*
 	 * Generation count -- incremented each time a connection is allocated
 	 * or freed.
 	 */
-	u_quad_t		 ipi_gencnt;		/* (g/l) */
+	u_quad_t		 ipi_gencnt;		/* (l) */
 
 	/*
 	 * Fields associated with port lookup and allocation.
