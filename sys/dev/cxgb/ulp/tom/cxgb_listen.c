@@ -748,6 +748,7 @@ reset:
 		goto reset;
 	}
 
+	/* New connection inpcb is already locked by syncache_expand(). */
 	new_inp = sotoinpcb(so);
 	INP_WLOCK_ASSERT(new_inp);
 

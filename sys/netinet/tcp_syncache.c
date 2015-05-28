@@ -928,6 +928,9 @@ abort2:
  * in the syncache, and if its there, we pull it out of
  * the cache and turn it into a full-blown connection in
  * the SYN-RECEIVED state.
+ *
+ * On syncache_socket() success the newly created socket
+ * has its underlying inp locked.
  */
 int
 syncache_expand(struct in_conninfo *inc, struct tcpopt *to, struct tcphdr *th,

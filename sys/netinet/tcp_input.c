@@ -1149,7 +1149,7 @@ relocked:
 			INP_WUNLOCK(inp);	/* listen socket */
 			inp = sotoinpcb(so);
 			/*
-			 * New connection is already locked by
+			 * New connection inpcb is already locked by
 			 * syncache_expand().
 			 */
 			INP_WLOCK_ASSERT(inp);
