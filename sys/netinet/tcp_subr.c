@@ -1073,7 +1073,7 @@ tcp_timer_discard(struct tcpcb *tp, uint32_t timer_type)
 	struct inpcb *inp;
 
 	CURVNET_SET(tp->t_vnet);
-	INP_INFO_WLOCK(&V_tcbinfo);
+	INP_INFO_RLOCK(&V_tcbinfo);
 	inp = tp->t_inpcb;
 	KASSERT(inp != NULL, ("%s: tp %p tp->t_inpcb == NULL",
 		__func__, tp));
@@ -1088,13 +1088,13 @@ tcp_timer_discard(struct tcpcb *tp, uint32_t timer_type)
 		tp->t_inpcb = NULL;
 		uma_zfree(V_tcpcb_zone, tp);
 		if (in_pcbrele_wlocked(inp)) {
-			INP_INFO_WUNLOCK(&V_tcbinfo);
+			INP_INFO_RUNLOCK(&V_tcbinfo);
 			CURVNET_RESTORE();
 			return;
 		}
 	}
 	INP_WUNLOCK(inp);
-	INP_INFO_WUNLOCK(&V_tcbinfo);
+	INP_INFO_RUNLOCK(&V_tcbinfo);
 	CURVNET_RESTORE();
 }
 
