@@ -174,7 +174,7 @@ struct	icmp6_filter;
  *
  * The inp_vflag field is overloaded, and would otherwise ideally be (c).
  *
- * TODO:  If currently only the TCP stack is leveraging the global pcbinfo lock
+ * TODO:  Currently only the TCP stack is leveraging the global pcbinfo lock
  * read-lock usage during modification, this model can be applied to other
  * protocols (especially SCTP).
  */
