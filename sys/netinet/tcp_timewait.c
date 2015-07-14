@@ -265,8 +265,8 @@ tcp_twstart(struct tcpcb *tp)
 		 * allowed. Remove a connection from TIMEWAIT queue in LRU
 		 * fashion to make room for this connection.
 		 *
-		 * pcbinfo lock is needed here to prevent deadlock as
-		 * two inpcb locks can be acquired simultaneously.
+		 * XXX:  Check if it possible to always have enough room
+		 * in advance based on guarantees provided by uma_zalloc().
 		 */
 		tw = tcp_tw_2msl_scan(1);
 		if (tw == NULL) {
@@ -671,11 +671,16 @@ tcp_tw_2msl_scan(int reuse)
 #ifdef INVARIANTS
 	if (reuse) {
 		/*
-		 * pcbinfo lock is needed in reuse case to prevent deadlock
-		 * as two inpcb locks can be acquired simultaneously:
+		 * Exclusive pcbinfo lock is not required in reuse case even if
+		 * two inpcb locks can be acquired simultaneously:
 		 *  - the inpcb transitioning to TIME_WAIT state in
 		 *    tcp_tw_start(),
 		 *  - the inpcb closed by tcp_twclose().
+		 *
+		 * It is because only inpcbs in FIN_WAIT2 or CLOSING states can
+		 * transition in TIME_WAIT state.  Then a pcbcb cannot be in
+		 * TIME_WAIT list and transitioning to TIME_WAIT state at same
+		 * time.
 		 */
 		INP_INFO_RLOCK_ASSERT(&V_tcbinfo);
 	}
