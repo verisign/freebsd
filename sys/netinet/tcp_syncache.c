@@ -695,6 +695,15 @@ syncache_socket(struct syncache *sc, struct socket *lso, struct mbuf *m)
 	inp = sotoinpcb(so);
 	inp->inp_inc.inc_fibnum = so->so_fibnum;
 	INP_WLOCK(inp);
+	/*
+	 * Exclusive pcbinfo lock is not required in syncache socket case even
+	 * if two inpcb locks can be acquired simultaneously:
+	 *  - the inpcb in LISTEN state,
+	 *  - the newly created inp.
+	 *
+	 * In this case, an inp cannot be at same time in LISTEN state and
+	 * just created by an accept() call.
+	 */
 	INP_HASH_WLOCK(&V_tcbinfo);
 
 	/* Insert new socket into PCB hash list. */
